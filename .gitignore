@@ -1,5 +1,6 @@
 my_net/checkpoint
 my_net/model*
+image/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

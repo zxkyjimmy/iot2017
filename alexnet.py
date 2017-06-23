@@ -28,7 +28,7 @@ class Network(object):
         
         self.accuracy = tf.metrics.accuracy(tf.argmax(self.ys, axis=1), tf.argmax(output, axis=1))[1]
         self.prob = tf.nn.softmax(output)
-        self.recognition = tf.argmax(self.prob, 1)
+        self.rec = tf.argmax(self.prob, 1)
         init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
         self.sess = tf.Session()
         self.sess.run(init)
@@ -63,7 +63,7 @@ class Network(object):
         print("Save to path: ", save_path)
     
     def restore(self):
-        self.save.restore(sefl.sess, 'my_net/model.ckpt')
+        self.saver.restore(self.sess, 'my_net/model.ckpt')
 
     def recognition(self, image):
         result_list = [
@@ -84,7 +84,7 @@ class Network(object):
         prob = self.sess.run(self.prob, feed)[0]
         for i in range(10):
             print(result_list[i], ":", prob[i])
-        no = self.sess.run(self.recognition, feed)[0]
+        no = self.sess.run(self.rec, feed)[0]
         print("Result:", result_list[no])
 
 #net=Network()

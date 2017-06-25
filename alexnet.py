@@ -78,6 +78,18 @@ class Network(object):
             'Mr. Brown Cafe   ',
             'Mai Xiang tea    '
         ]
+        output_list = [
+            '1,0,0,0,0,0,0,0,0,0',
+            '0,0,0,0,0,0,0,0,0,1',
+            '0,0,0,0,0,0,0,1,0,0',
+            '0,0,0,0,0,0,0,0,1,0',
+            '0,1,0,0,0,0,0,0,0,0',
+            '0,0,1,0,0,0,0,0,0,0',
+            '0,0,0,1,0,0,0,0,0,0',
+            '0,0,0,0,1,0,0,0,0,0',
+            '0,0,0,0,0,1,0,0,0,0',
+            '0,0,0,0,0,0,1,0,0,0'
+        ]
         feed = {
             self.xs: image
         }
@@ -86,5 +98,6 @@ class Network(object):
             print(result_list[i], ":", prob[i])
         no = self.sess.run(self.rec, feed)[0]
         print("Result:", result_list[no])
+        return output_list[no]
 
 #net=Network()

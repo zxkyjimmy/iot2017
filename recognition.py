@@ -16,7 +16,7 @@ def main():
         image.append(np.array(im) / 255)
         net = alexnet.Network()
         net.restore()
-        net.recognition(image)
+        output = net.recognition(image)
     else:
         Usage()
 

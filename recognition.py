@@ -16,6 +16,17 @@ def Usage():
     print("Usage :")
     print("    python {} url".format(sys.argv[0]))
 
+def rec(url):
+    name = download(url)
+    im = Image.open(name).resize([227, 227])
+    image = []
+    image.append(np.array(im) / 255)
+    net = alexnet.Network()
+    net.restore()
+    output = net.recognition(image)
+    os.remove(name)
+    return output
+
 def main():
     argc = len(sys.argv)
     if argc == 2:
@@ -27,6 +38,7 @@ def main():
         net = alexnet.Network()
         net.restore()
         output = net.recognition(image)
+        print(output)
         os.remove(fname)
     else:
         Usage()

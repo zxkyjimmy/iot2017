@@ -2,21 +2,32 @@ import sys
 import alexnet
 from PIL import Image
 import numpy as np
+import requests
+import os
+
+def download(url):
+    filename = 'rec.jpg'
+    with open(filename, 'wb') as f:
+        res = requests.get(url)
+        f.write(res.content)
+    return filename
 
 def Usage():
     print("Usage :")
-    print("    python {} imagefilename".format(sys.argv[0]))
+    print("    python {} url".format(sys.argv[0]))
 
 def main():
     argc = len(sys.argv)
     if argc == 2:
-        fname = sys.argv[1]
+        url = sys.argv[1]
+        fname = download(url)
         im = Image.open(fname).resize([227, 227])
         image = []
         image.append(np.array(im) / 255)
         net = alexnet.Network()
         net.restore()
         output = net.recognition(image)
+        os.remove(fname)
     else:
         Usage()
 

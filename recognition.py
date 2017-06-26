@@ -5,6 +5,9 @@ import numpy as np
 import requests
 import os
 
+net = alexnet.Network()
+net.restore()
+
 def download(url):
     filename = 'rec.jpg'
     with open(filename, 'wb') as f:
@@ -21,8 +24,6 @@ def rec(url):
     im = Image.open(name).resize([227, 227])
     image = []
     image.append(np.array(im) / 255)
-    net = alexnet.Network()
-    net.restore()
     output = net.recognition(image)
     os.remove(name)
     return output

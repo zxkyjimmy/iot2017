@@ -8,8 +8,13 @@ import os
 net = alexnet.Network()
 net.restore()
 
+import time
 def download(url):
     filename = 'rec.jpg'
+    res = requests.get(url)
+    while res.status_code == 404:
+        time.sleep(0.5)
+        res = requests.get(url)
     with open(filename, 'wb') as f:
         res = requests.get(url)
         f.write(res.content)

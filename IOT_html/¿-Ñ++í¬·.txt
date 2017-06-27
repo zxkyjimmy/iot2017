@@ -1,0 +1,4 @@
+1.開啟"Server" 資料夾裡面的 "Web_Socket_BoXian.exe"
+  然後直接按"open" 這樣就可以運行伺服器
+
+2.開啟"index.html"就可以看到長條圖在更新

@@ -1,0 +1,506 @@
+<!DOCTYPE HTML>
+<!--
+	Helios by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>Intelligent Refrigerator</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<!--[if lte IE 8]><script src="assets/js/ie/html5shiv.js"></script><![endif]-->
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<!--[if lte IE 8]><link rel="stylesheet" href="assets/css/ie8.css" /><![endif]-->
+		<script src="assets/js/js/highstock.js"></script>
+	    <script src="assets/js/js/exporting.js"></script>
+	    <script src="assets/js/js/highcharts-3d.js"></script>
+	    <script>
+		      /* Copyright (C) 2007 Richard Atterer, richardcatterer.net
+		       * This program is free software; you can redistribute it and/or modify it
+		       * under the terms of the GNU General Public License, version 2. See the file
+		       * COPYING for details.
+		       */
+		      var ser_IP="172.20.10.2";
+		      var imageNr = 0; // Serial number of current image
+		      var finished = new Array(); // References to img objects which have finished downloading
+		      var paused = false;
+		      var previous_time = new Date();
+		      var fNi = 0, msAvg = 0, fpsAvg = 0, fcnt = 0, fN = 80, msa = [], wsize = 4;
+		      function createImageLayer() {
+		        var img = new Image();
+		        img.style.position = "absolute";
+		        img.style.zIndex = -1;
+		        img.onload = imageOnload;
+		        img.onclick = imageOnclick;
+		        img.width = 512;
+		        img.height = 384;
+		        img.src = "http://"+ser_IP+":8080/?action=snapshot&n=" + (++imageNr);
+			      //img.src = "./?action=snapshot&n=" + (++imageNr);
+		        var webcam = document.getElementById("webcam");
+				window.info = document.getElementById('info').firstChild;
+				window.ravgFps = document.getElementById('ravgfps').firstChild;
+				window.ravgMs = document.getElementById('ravgms').firstChild;
+				webcam.insertBefore(img, webcam.firstChild);
+				document.getElementById('fN').firstChild.nodeValue = fN;
+		      }
+			
+			function runningAvgs (delta) {
+				// delta is the measured frame period
+				var len;
+				if (fcnt < fN) {
+					fcnt++;
+					// we need to populate the sample array
+					msa.push(delta);
+					// calculate average period so far
+					msAvg += (delta - msAvg) / fcnt;
+					
+				} else {
+					/*
+						running average (fN samples) according to the formula:
+						rAvg = rAvg - value_fN_samples_back / fN + newest_value / fN
+					*/
+					msAvg += (delta - msa[0])/fN;
+					// drop oldest ms value, msa[0]
+					msa = msa.slice(1);
+					// append newest value, delta
+					msa.push(delta);
+				}
+				// calculate average fps
+				fpsAvg = 1000 / msAvg;
+				/*
+					once every fN frames, check if we need to adjust the averaging window
+					since faster rates seem to need more samples to reach a stable(er) readout
+				*/
+				if (++fNi == fN) {
+					fNi = 0;
+					// new window size
+					fN = parseInt(fpsAvg * wsize);
+					len = fcnt - fN;
+					// if our sample array, msa, has extra samples, then trim it to the new size
+					if (len > 0) {
+						// adjust averaging window (nr of samples)
+						msa = msa.splice(len);
+						// avoid populating the sample array again
+						fcnt = fN;
+					}
+				}
+			}
+		      // Two layers are always present (except at the very beginning), to avoid flicker
+		      function imageOnload() {
+		        this.style.zIndex = imageNr; // Image finished, bring to front!
+		        while (1 < finished.length) {
+		          var del = finished.shift(); // Delete old image(s) from document
+		          del.parentNode.removeChild(del);
+		        }
+		        finished.push(this);
+		        current_time = new Date();
+		        delta = current_time.getTime() - previous_time.getTime();
+		        fps   = (1000.0 / delta).toFixed(1);
+				runningAvgs(delta);
+		        info.nodeValue = delta + " ms (" + fps + " fps)";
+				ravgFps.nodeValue = fpsAvg.toFixed(1);
+				ravgMs.nodeValue = msAvg.toFixed(0);
+				previous_time = current_time;
+		        if (!paused) createImageLayer();
+		      }
+		      function imageOnclick() { // Clicking on the image will pause the stream
+		        paused = !paused;
+		        if (!paused) createImageLayer();
+		      }
+	    </script>
+	</head>
+	<body class="homepage" onload="ShowTime();start();createImageLayer();">
+		<div id="page-wrapper">
+
+			<!-- Header -->
+				<div id="header">
+
+					<!-- Inner -->
+						<div class="inner">
+							<header>
+								<h1><a href="index.html" id="logo">Intelligent Refrigerator</a></h1>
+								<hr />
+								<p>A new way to simplify our lives</p>
+							</header>
+							<footer>
+								<a href="#banner" class="button circled scrolly">Start</a>
+							</footer>
+						</div>
+
+					<!-- Nav -->
+						<nav id="nav">
+							<ul>
+								<li><a href="index.html">Home</a></li>
+
+								<li><a class="scrolly" href="#img1">
+									<img id="icon4" src="images/upload.png" alt="" height="22" width="22">Design Concept
+								</a></li>
+
+								<li><a class="scrolly" href="#main">
+									<img id="icon2" src="images/clipboard.png" alt="" height="22" width="22">Contents
+								</a></li>
+
+								<li><a class="scrolly" href="#main2">
+									<img id="icon1" src="images/view.png" alt="" height="22" width="22">View Inside</a>
+								</li>
+
+								<li><a class="scrolly" href="#Nutrition">
+									<img id="icon3" src="images/cardiogram.png" alt="" height="22" width="22">Nutrition
+								</a></li>
+							</ul>
+						</nav>
+
+				</div>
+
+            
+
+                        <!-- Banner -->
+            <section id="banner" style="background-color:#F0F4F4">
+                <header><br>
+                    <img id="img1" src="images/fridge.png" alt="" height="560" align="left" />
+                    
+                    <br><br><br><br><br><br>
+                    <h2><strong>Design Concept</strong>.</h2><br>
+                    <p>
+                	<a class="scrolly" href="#main">
+                    	<img id="icon2" src="images/clipboard.png" alt="" height="42" width="42"/>  簡化庫存管理作業
+                    </a> &nbsp; &nbsp; &nbsp; &nbsp;
+                	
+                    <a class="scrolly" href="#main2">
+                		<img id="icon1" src="images/view.png" alt="" height="42" width="42"/>  有效掌握冰箱現況<br><br>
+                	</a>
+
+                    <a class="scrolly" href="#Nutrition">
+                    	<img id="icon3" src="images/cardiogram.png" alt="" height="42" width="42"/>  食物營養成分標示
+                    </a> &nbsp; &nbsp; &nbsp; &nbsp;
+                    
+                    <a class="scrolly" href="#banner">
+                    	<img id="icon4" src="images/upload.png" alt="" height="42" width="42"/>  數據同步上傳雲端
+                    </a>
+                    
+                    </p><br><br><br><br><br>
+                </header>
+            </section>
+         
+
+
+
+			
+				<div class="wrapper style2"  >
+					<!-- Main  視覺化-->
+                    <article id="main" class="container special"> <br><br><header><h2><strong>Contents</strong>.</h2><p></p></header>                                   
+                        <div id="div_t" style="width:960px; height:400px; margin: 0px auto;"></div>
+                        <hr /><!-- 分割線 -->
+
+                        <!-- Main2  即時影像-->
+                        <header id="main2"><br><h2><strong>View Inside</strong>.</h2><p></p></header>
+                        <div id="content" style="">
+					        <div id="sidebar" style="display:none;">
+					          <!-- display:none; 整個區塊隱藏 -->
+					          <p><span id="info">-</span><br/>
+					          Avg<sub id="fN">-</sub> : <span  id="ravgms">-</span> ms (<span  id="ravgfps">-</span> fps)
+					          </p>
+					        </div>
+					        <div id="webcam" style="width:512px;height:394px;margin: 0px auto;">
+					        	<noscript><img src="./?action=snapshot" width="512px" height="384px" /></noscript>
+					        </div>
+					    </div>                       
+                        
+					</article>
+
+                </div>
+
+						<!-- Carousel -->
+            <section class="carousel"><div id="Nutrition"style="text-align:center;"><h2><strong>Nutrition</strong>.</h2></div><br><br>
+					<div class="reel">
+                        
+						<article>
+							<a href="#Nutrition" class="image featured">
+								<img src="images/my_img/1.jpg" height="250" width="400" alt="" />
+							</a>
+							<header>
+								<h3><a href="#Nutrition">檸檬茶</a></h3>
+							</header>
+							<p>成份：水、高果糖糖漿、檸檬酸、茶葉萃取物(紅茶)、檸檬酸鉀、香料。熱量：0.33大卡/100毫升。</p>
+						</article>
+
+						<article>
+							<a href="#Nutrition" class="image featured">
+								<img src="images/my_img/2.jpg" height="250" width="400" alt="" />
+							</a>
+							<header>
+								<h3><a href="#Nutrition">純喫茶</a></h3>
+							</header>
+							<p>成分：水、蔗糖、紅茶、大麥、香料、抗氧化劑。<br>熱量：29.6大卡/100毫升。</p>
+						</article>
+
+						<article>
+							<a href="#Nutrition" class="image featured">
+								<img src="images/my_img/3.jpg" height="250" width="400" alt="" />
+							</a>
+							<header>
+								<h3><a href="#Nutrition">AB優酪乳</a></h3>
+							</header>
+							<p>成分：水、乳粉、生乳、果膠、寡醣、香料、鏈球菌、亞斯菲德菌、雷特氏B菌。熱量：58大卡/100毫升。</p>
+						</article>
+
+						<article>
+							<a href="#Nutrition" class="image featured">
+								<img src="images/my_img/4.jpg" height="250" width="400" alt="" />
+							</a>
+							<header>
+								<h3><a href="#Nutrition">所以奶茶（豆乳紅茶）</a></h3>
+							</header>
+							<p>成分：水、砂糖、豆漿粉、大豆蛋白、香料、鹿角菜膠、大豆蛋白、小蘇打。熱量：0.50大卡/100毫升。</p>
+						</article>
+
+						<article>
+							<a href="#Nutrition" class="image featured">
+								<img src="images/my_img/5.jpg" height="250" width="400" alt="" />
+							</a>
+							<header>
+								<h3><a href="#Nutrition">布丁</a></h3>
+							</header>
+							<p>成分：水、玉米澱粉、豆膠、色素、香料、甘油酯、菜膠、乳酸鈣、全蛋粉。熱量：114大卡/100公克。</p>
+                            
+						</article>
+
+						<article>
+							<a href="#Nutrition" class="image featured">
+								<img src="images/my_img/6.jpg" height="250" width="400" alt="" />
+							</a>
+							<header>
+								<h3><a href="#Nutrition">伯朗咖啡</a></h3>
+							</header>
+							<p>成分：水、咖啡萃取液、砂糖、奶粉、碳酸氫鈉、乳化劑、大豆卵磷脂。熱量：0.44大卡/100公克。</p>
+                        
+						</article>
+
+						<article>
+							<a href="#Nutrition" class="image featured">
+								<img src="images/my_img/7.jpg" height="250" width="400" alt="" />
+							</a>
+							<header>
+								<h3><a href="#Nutrition">麥香綠茶</a></h3>
+							</header>
+							<p>成分：水、蔗糖、大麥萃取液、綠茶、茉莉綠茶、抗氧化劑、香料、碳酸氫鈉。熱量：0.28大卡/100公克。</p>
+						</article>
+
+						<article>
+							<a href="#Nutrition" class="image featured">
+								<img src="images/my_img/8.jpg" height="250" width="400" alt="" />
+							</a>
+							<header>
+								<h3><a href="#Nutrition">蘋果</a></h3>
+							</header>
+							<p>成分：水、碳水化合物、維生素C、維生素B、膳食纖維、菸鹼酸。熱量：50大卡/100公克。</p>
+						</article>
+
+						<article>
+							<a href="#Nutrition" class="image featured">
+								<img src="images/my_img/9.jpg" height="250" width="400" alt="" />
+							</a>
+							<header>
+								<h3><a href="#Nutrition">養樂多</a></h3>
+							</header>
+							<p>成分：水、砂糖液糖、果糖液糖、生乳、脫脂乳粉、天然香料、養樂多代田菌。熱量：72大卡/100毫升。</p>
+						</article>
+
+						<article>
+							<a href="#Nutrition" class="image featured">
+								<img src="images/my_img/10.jpg" height="250" width="400" alt="" />
+							</a>
+							<header>
+								<h3><a href="#Nutrition">巧克力牛奶</a></h3>
+							</header>
+							<p>成分：水、生乳、奶粉、砂糖、果糖、可可粉、食鹽。<br>熱量：63.8大卡/100毫升。</p>
+						</article>
+
+					</div>
+				</section>
+
+
+			<!-- Footer -->
+				<div id="footer">
+					<div class="container">
+						
+						<div class="row">
+							<div class="12u">
+
+								<!-- Contact -->
+									<section class="contact">
+										<header>
+											<h3>2017 NTNU&nbsp; &nbsp; Internet of Everything Term Project</h3>
+										</header>
+										<p>Team Members&nbsp; &nbsp; :&nbsp;&nbsp;&nbsp; &nbsp;YAN JI, CHEN&nbsp;&nbsp;&nbsp; &nbsp;& &nbsp;&nbsp;&nbsp;&nbsp;BO XIAN, GUO&nbsp;&nbsp; &nbsp;& &nbsp;&nbsp;&nbsp;JIA HUEI, CHEN   </p>
+										
+									</section>
+
+								<!-- Copyright -->
+									<div class="copyright">
+										<ul class="menu">
+											<li>&copy; Untitled. All rights reserved.</li><li>Design: <a class="scrolly" href="#">HTML5 UP</a></li>
+										</ul>
+									</div>
+
+							</div>
+
+						</div>
+					</div>
+				</div>
+
+		</div>
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/jquery.dropotron.min.js"></script>
+			<script src="assets/js/jquery.scrolly.min.js"></script>
+			<script src="assets/js/jquery.onvisible.min.js"></script>
+			<script src="assets/js/skel.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<!--[if lte IE 8]><script src="assets/js/ie/respond.min.js"></script><![endif]-->
+			<script src="assets/js/main.js"></script>
+<script>
+  	
+	var series_temperature,series_humidity;
+    var series_temperature_obj,series_humidity_obj;
+    function ShowTime(){
+        var NowDate = new Date();
+        var d = NowDate.getDay();
+        var dayNames = new Array("星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六");
+        //document.getElementById('showbox').innerHTML = '資料時間：' + NowDate.toLocaleString() + '（' + dayNames[d] + '）';
+        var Time_str='資料更新時間：' + NowDate.toLocaleString() + '（' + dayNames[d] + '）';
+        return Time_str;
+        //setTimeout('ShowTime()', 1000);
+    }
+
+	function start() {
+            var wsImpl = window.WebSocket || window.MozWebSocket;
+            var idata=0;
+            idata=null;
+            
+            
+
+            // create a new websocket and connect
+            //window.ws = new wsImpl('ws://localhost:8181/');
+            window.ws = new wsImpl('ws://172.20.10.5:8181/');
+            //window.ws = new wsImpl('ws://192.168.1.102:8181/');
+            //window.ws = new wsImpl('ws://192.68.1.100:8181/');
+            //window.ws = new wsImpl('ws://10.211.55.8:8181/');
+
+            // when data is comming from the server, this metod is called
+            //接收資料區
+            ws.onmessage = function (evt) {
+                //inc.innerHTML += evt.data + '<br/>';
+                idata = ( evt.data) ;
+                if(evt.data=='error'){
+                    console.log("message = ",evt.data);
+                }
+                //console.log("message = ",evt.data);
+                var x = (new Date()).getTime(); // current time
+                    //y = Math.round(Math.random() * 100);
+                var y = parseFloat(idata);                                
+                    //y=100;
+                    //idata=null;
+                    //console.log(y);
+                //series_x.addPoint([x, y], true, true);
+                //series_y.addPoint([x, y*2.3], true, true);
+                //series_z.addPoint([0, y*6.7], true, true);
+                var data_arr= new Array();
+                
+                //idata="12.22,68.99,33.66";
+                data_arr = idata.split(",");
+                var data_arr_Int= new Int8Array(data_arr);
+                //var num = new Number(data_arr[0]).toFixed(1);//toFixed(1) 小數點一位
+                //console.log("num1",num);
+                //document.getElementById('temperature').innerHTML="temperature = "+num+'°C';
+                //series_temperature.addPoint([0, num*1], true, true);
+                //series_temperature_obj.setTitle(null, { text: num.toString()+'°C'});
+                //series_temperature.setData([parseFloat(num)]);
+                //series_temperature_obj.series[0].setData([parseFloat(num),parseFloat(num),parseFloat(num),1,2,0,2,0,2,1]);
+                //console.log(data_arr_Int);
+                series_temperature_obj.series[0].setData(data_arr_Int);
+                
+                if(series_temperature_obj!=null)
+        		series_temperature_obj.setTitle(null, { text:ShowTime()});
+                //series_temperature_obj.series[0].setData(data_arr);
+            };
+
+            // when the connection is established, this method is called
+            ws.onopen = function () {
+                //inc.innerHTML += '.. connection open<br/>';
+                //alert("onopen");
+            };
+
+            // when the connection is closed, this method is called
+            ws.onclose = function () {
+                //inc.innerHTML += '.. connection closed<br/>';
+            }
+
+            
+
+            //建立圖表
+            Highcharts.setOptions({
+                global: {
+                    useUTC: false
+                }
+            });
+
+            
+            // Create the chart
+            Highcharts.chart('div_t', {
+                chart: {
+                    type: 'column',
+                    options3d: {
+                        enabled: false,
+                        alpha: 10,
+                        beta: 25,
+                        depth: 70
+                    },
+                    events: {
+                        load: function () {
+
+                            // set up the updating of the chart each second
+                            var series = this.series[0];
+                            series_temperature=series;
+                            series_temperature_obj = this;
+                            
+                        }
+                    }
+                },
+                title: {
+                    text: '即時統計表'
+                },
+                subtitle: {
+                    text: '資料更新時間'
+                },
+                plotOptions: {
+                    column: {
+                        depth: 25
+                    }
+                },
+                xAxis: {
+                    //categories: Highcharts.getOptions().lang.shortMonths
+                    categories: ["檸檬茶","純喫茶","AB優酪乳","所以奶茶<br>(豆乳紅茶)","布丁","伯朗咖啡","麥香綠茶","蘋果","養樂多","巧克力牛奶"],
+                    title:{
+                    	text:null
+                    }
+
+                },
+                yAxis: {
+                    title: {
+                        text: null
+                    },min: 0, max: 3
+                },
+                series: [{
+                    name: '數量',
+                    data: [0,0,0,0,0,0,0,0,0,0]
+                }
+                ]
+            });
+		}
+
+	</script>
+	</body>
+</html>
